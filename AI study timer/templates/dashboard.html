@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Study Planner{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div>
+        <h1 class="welcome-title">Hello, {{ name }}!</h1>
+        <p class="date-indicator">Let's stay disciplined today.</p>
+    </div>
+    <div style="text-align: right;">
+        <span class="subject-badge subject-{{ today_subject|replace(' ', '_')|replace('+', '_') }}" style="font-size: 0.9rem; padding: 6px 12px; border-radius: 8px;">
+            Today's Focus: {{ today_subject }}
+        </span>
+    </div>
+</div>
+
+<!-- Metrics Row -->
+<div class="metrics-row">
+    <div class="metric-box">
+        <div class="metric-value productivity">{{ productivity_score }}/100</div>
+        <div class="metric-label">Productivity Index</div>
+    </div>
+    <div class="metric-box">
+        <div class="metric-value countdown">{{ user.days_left_exam }} days</div>
+        <div class="metric-label">Until Exams</div>
+    </div>
+    <div class="metric-box">
+        <div class="metric-value streak" id="metric-streak">{{ user.streak }} days</div>
+        <div class="metric-label">Study Streak 🔥</div>
+    </div>
+    <div class="metric-box">
+        <div class="metric-value" style="color: var(--color-primary);" id="metric-pomodoros">{{ pomodoros_completed }}</div>
+        <div class="metric-label">Pomodoros Today ⏱️</div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left Column: Core Focus & Metrics -->
+    <div class="dashboard-column">
+        <!-- Daily Focus Card -->
+        <div class="glass-card">
+            <h2 class="card-title">📖 Today's Study Block</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 8px; font-weight: 700;">
+                        {{ today_subject }}
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        Recommended Duration: <strong style="color: white;">{{ today_hours }} hours</strong>
+                    </p>
+                </div>
+                <div>
+                    {% if today_subject != "Revision + Mock Test" and today_subject != "Free / Rest Day" %}
+                    <a href="/progress" class="btn-primary" style="padding: 10px 20px; font-size: 0.9rem; text-decoration: none;">
+                        Log Complete
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user.days_left_exam < 10 %}
+            <div style="margin-top: 16px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px; font-size: 0.85rem; display: flex; gap: 8px; align-items: center;">
+                <span style="font-size: 1.2rem;">⚠️</span>
+                <span style="color: #fca5a5;"><strong>Intense Exam Focus:</strong> Less than 10 days left! Practice daily mock tests and avoid learning new heavy topics.</span>
+            </div>
+            {% elif user.days_left_exam < 30 %}
+            <div style="margin-top: 16px; background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px; font-size: 0.85rem; display: flex; gap: 8px; align-items: center;">
+                <span style="font-size: 1.2rem;">🔔</span>
+                <span style="color: #fde047;"><strong>Revision Mode:</strong> Exams are in less than a month. Focus hours have been scaled up for revisions.</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Productivity Score Factors -->
+        <div class="glass-card">
+            <h2 class="card-title">🔬 Productivity Breakdown</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+                        <span style="color: var(--text-secondary);">Sleep Schedule</span>
+                        <span style="{{ 'color: var(--color-success);' if user.sleep_hours >= 7 else 'color: var(--color-danger);' }}">
+                            {{ user.sleep_hours }} hrs
+                        </span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background-color: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin-bottom: 16px;">
+                        <div style="width: {{ (user.sleep_hours / 9.0 * 100)|round }}%; height: 100%; background-color: {{ 'var(--color-success)' if user.sleep_hours >= 7 else 'var(--color-danger)' }};"></div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+                        <span style="color: var(--text-secondary);">Attendance Level</span>
+                        <span style="{{ 'color: var(--color-success);' if user.attendance >= 75 else 'color: var(--color-danger);' }}">
+                            {{ user.attendance }}%
+                        </span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background-color: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin-bottom: 16px;">
+                        <div style="width: {{ user.attendance }}%; height: 100%; background-color: {{ 'var(--color-success)' if user.attendance >= 75 else 'var(--color-danger)' }};"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+                        <span style="color: var(--text-secondary);">Test Performance</span>
+                        <span style="{{ 'color: var(--color-success);' if user.test_score >= 75 else 'color: var(--color-warning);' }}">
+                            {{ user.test_score }}%
+                        </span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background-color: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                        <div style="width: {{ user.test_score }}%; height: 100%; background-color: {{ 'var(--color-success)' if user.test_score >= 75 else 'var(--color-warning)' }};"></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+                        <span style="color: var(--text-secondary);">Distraction Control</span>
+                        <span style="{{ 'color: var(--color-success);' if user.distraction_level <= 4 else 'color: var(--color-danger);' }}">
+                            Level {{ user.distraction_level }}/10
+                        </span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background-color: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin-bottom: 16px;">
+                        <div style="width: {{ (10 - user.distraction_level) * 10 }}%; height: 100%; background-color: {{ 'var(--color-success)' if user.distraction_level <= 4 else 'var(--color-danger)' }};"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+                        <span style="color: var(--text-secondary);">Physical Activity</span>
+                        <span style="{{ 'color: var(--color-success);' if user.physical_activity >= 1.5 else 'color: var(--color-warning);' }}">
+                            {{ user.physical_activity }} hrs/day
+                        </span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background-color: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                        <div style="width: {{ (user.physical_activity / 4.0 * 100)|round }}%; height: 100%; background-color: {{ 'var(--color-success)' if user.physical_activity >= 1.5 else 'var(--color-warning)' }};"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Motivational Quote -->
+        <div class="glass-card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05));">
+            <h2 class="card-title">💡 Daily Catalyst</h2>
+            <div class="quote-box">
+                "{{ quote_text }}"
+            </div>
+            <div class="quote-author">— {{ quote_author }}</div>
+        </div>
+    </div>
+
+    <!-- Right Column: Timer & Quick Tools -->
+    <div class="dashboard-column">
+        <!-- Pomodoro Card -->
+        <div class="glass-card" style="display: flex; flex-direction: column; align-items: center;">
+            <h2 class="card-title" style="align-self: flex-start;">⏱️ Pomodoro Timer</h2>
+            
+            <div class="pomodoro-container">
+                <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                    <svg class="timer-svg">
+                        <circle class="timer-circle-bg" cx="100" cy="100" r="96"></circle>
+                        <circle class="timer-circle-progress" id="pomodoro-progress" cx="100" cy="100" r="96"></circle>
+                    </svg>
+                    <div class="timer-display">
+                        <span id="pomodoro-minutes">25</span>:<span id="pomodoro-seconds">00</span>
+                    </div>
+                </div>
+                
+                <div class="speech-status" id="pomodoro-label" style="margin-top: 16px; font-weight: 600; color: var(--color-primary);">Focus Time</div>
+                
+                <div class="timer-controls">
+                    <button class="btn-timer primary" id="pomodoro-start">Start</button>
+                    <button class="btn-timer" id="pomodoro-pause" style="display: none;">Pause</button>
+                    <button class="btn-timer" id="pomodoro-reset">Reset</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Log Form / Info -->
+        <div class="glass-card">
+            <h2 class="card-title">🛠️ Quick Actions</h2>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <a href="/calendar" class="btn-secondary" style="justify-content: center;">
+                    📅 View Full 30-Day Calendar
+                </a>
+                <a href="/progress" class="btn-secondary" style="justify-content: center;">
+                    📝 Log Daily Progress
+                </a>
+                <a href="/ai-advisor" class="btn-secondary" style="justify-content: center;">
+                    🤖 Speak to AI Advisor
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

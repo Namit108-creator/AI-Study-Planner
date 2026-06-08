@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}AI Advisor - AI Study Planner{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div>
+        <h1 class="welcome-title">AI Study Advisor</h1>
+        <p class="date-indicator">Predictive analysis and machine learning feedback</p>
+    </div>
+</div>
+
+<!-- Invisible configuration container for voice.js -->
+<div id="voice-assistant-config" 
+     data-name="{{ user.name }}" 
+     data-focus="{{ today_subject }}" 
+     data-autogreet="true">
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left Column: AI Recommendations -->
+    <div class="dashboard-column">
+        <!-- Predicted Study Plan Card -->
+        <div class="glass-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05)); border-color: var(--border-active);">
+            <h2 class="card-title">🤖 Machine Learning Prediction</h2>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 6px;">Recommended Study Plan Intensity</p>
+                    <h3 style="font-size: 2.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: white;">
+                        {% if study_plan == 'Heavy' %}
+                            <span style="color: var(--color-danger);">🔴 {{ study_plan }} Plan</span>
+                        {% elif study_plan == 'Light' %}
+                            <span style="color: var(--color-success);">🟢 {{ study_plan }} Plan</span>
+                        {% else %}
+                            <span style="color: var(--color-primary);">🔵 {{ study_plan }} Plan</span>
+                        {% endif %}
+                    </h3>
+                </div>
+                <div style="max-width: 320px; font-size: 0.85rem; color: var(--text-secondary); text-align: right; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                    <strong>Decision Engine:</strong> Random Forest Classifier trained on 500 records. Classifies intensity based on distraction control, test trends, and sleep hours.
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Health and Lifestyle Advice -->
+        <div class="glass-card">
+            <h2 class="card-title">🩺 Health & Productivity Advisory</h2>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                {% if user.distraction_level >= 8 %}
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: rgba(239, 68, 68, 0.05); border-left: 4px solid var(--color-danger); border-radius: 4px;">
+                    <span style="font-size: 1.2rem;">📱</span>
+                    <div>
+                        <strong style="color: white; font-size: 0.9rem; display: block; margin-bottom: 2px;">Critical Distraction Level</strong>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Your distraction rating is {{ user.distraction_level }}/10. Keep your mobile device powered off or in another room during study blocks. Avoid opening social media tabs on your browser.</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if user.sleep_hours < 6.5 %}
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: rgba(245, 158, 11, 0.05); border-left: 4px solid var(--color-warning); border-radius: 4px;">
+                    <span style="font-size: 1.2rem;">🛌</span>
+                    <div>
+                        <strong style="color: white; font-size: 0.9rem; display: block; margin-bottom: 2px;">Sleep Deprivation Risk</strong>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Sleeping {{ user.sleep_hours }} hours is below the cognitive threshold. Sleep consolidation is essential for forming long-term memory in technical subjects like Physics and Chemistry. Aim for 7.5+ hours.</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if user.attendance < 75 %}
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: rgba(239, 68, 68, 0.05); border-left: 4px solid var(--color-danger); border-radius: 4px;">
+                    <span style="font-size: 1.2rem;">🏫</span>
+                    <div>
+                        <strong style="color: white; font-size: 0.9rem; display: block; margin-bottom: 2px;">Attendance Shortage</strong>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Your attendance is {{ user.attendance }}%. Many schools enforce a strict 75% limit for board exam submissions. Attend classrooms consistently to avoid admin blocks and cover syllabuses.</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if user.physical_activity < 1.0 %}
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: rgba(59, 130, 246, 0.05); border-left: 4px solid var(--color-primary); border-radius: 4px;">
+                    <span style="font-size: 1.2rem;">🏃</span>
+                    <div>
+                        <strong style="color: white; font-size: 0.9rem; display: block; margin-bottom: 2px;">Increase Aerobic Activity</strong>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Adding 30-40 minutes of physical activity (brisk walking, stretching) enhances prefrontal cortex circulation, optimizing your focus duration during study blocks.</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if user.test_score >= 85 %}
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: rgba(16, 185, 129, 0.05); border-left: 4px solid var(--color-success); border-radius: 4px;">
+                    <span style="font-size: 1.2rem;">🎯</span>
+                    <div>
+                        <strong style="color: white; font-size: 0.9rem; display: block; margin-bottom: 2px;">Excellent Scores Trend</strong>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Your current average score of {{ user.test_score }}% is outstanding. We suggest solving JEE Advanced or ISC previous years' question banks to push your capabilities.</span>
+                    </div>
+                {% else %}
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: rgba(139, 92, 246, 0.05); border-left: 4px solid var(--color-secondary); border-radius: 4px;">
+                    <span style="font-size: 1.2rem;">📚</span>
+                    <div>
+                        <strong style="color: white; font-size: 0.9rem; display: block; margin-bottom: 2px;">Boost Concepts Focus</strong>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Focus on clearing syllabus concepts. Use active recall and spaced repetition to solidify topics before taking timed tests.</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Voice Assistant & Weakness Detection -->
+    <div class="dashboard-column">
+        <!-- Voice Assistant Panel -->
+        <div class="glass-card" style="text-align: center;">
+            <h2 class="card-title" style="text-align: left;">🎙️ Voice Interface</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">Hands-free commands and auditory announcements</p>
+            
+            <div class="voice-wave">
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+            </div>
+            
+            <div class="speech-status" id="speech-status">Waiting for assistant initialization...</div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: center;">
+                <button class="btn-timer primary" id="speak-btn" style="padding: 12px 20px;">
+                    🔊 Read Plan
+                </button>
+                <button class="btn-timer" id="listen-btn" style="padding: 12px 20px; background-color: rgba(255,255,255,0.02); border-color: var(--border-glass);">
+                    🎙️ Voice Command
+                </button>
+            </div>
+            <div style="margin-top: 16px; font-size: 0.75rem; color: var(--text-muted);">
+                Commands: "start timer", "open schedule", "open progress", "hello"
+            </div>
+        </div>
+
+        <!-- AI Weakness & Schedule Balancer -->
+        <div class="glass-card">
+            <h2 class="card-title">⚖️ Dynamic Subject Balancer</h2>
+            <div style="margin-bottom: 16px;">
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px;">Primary Weakness Focus</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: white;">
+                    🚩 {{ user.weak_subject }}
+                </div>
+            </div>
+            
+            <div style="background-color: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-glass); border-radius: 8px; padding: 16px; font-size: 0.85rem;">
+                <strong style="color: var(--color-primary); display: block; margin-bottom: 4px;">Schedule Balancing Action:</strong>
+                {% if user.weak_subject %}
+                    The 30-day schedule has allocated additional hours to <strong>{{ user.weak_subject }}</strong> and mapped it as a primary focus on rotating days. Re-assess your weakness ratings if you see exam marks improving in this topic.
+                {% else %}
+                    No weak subject set in your settings. Update your parameters in the Calendar Settings to balance your daily hours.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

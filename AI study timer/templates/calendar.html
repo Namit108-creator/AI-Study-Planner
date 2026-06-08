@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}30-Day Study Schedule - AI Study Planner{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div>
+        <h1 class="welcome-title">Your 30-Day Study Calendar</h1>
+        <p class="date-indicator">Rotating schedule optimized for {{ user.mode }} Mode</p>
+    </div>
+    
+    <div style="display: flex; gap: 12px;">
+        <a href="/export/csv" class="btn-secondary">
+            📥 Export CSV
+        </a>
+        <a href="/export/json" class="btn-secondary">
+            📥 Export JSON
+        </a>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="grid-template-columns: 1fr 3fr;">
+    <!-- Sidebar: Schedule Settings -->
+    <div class="dashboard-column">
+        <div class="glass-card">
+            <h2 class="card-title">⚙️ Tuning Parameters</h2>
+            <form action="/regenerate_schedule" method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="mode">Prep Mode</label>
+                    <select id="mode" name="mode" class="form-select">
+                        <option value="Boards" {% if user.mode == 'Boards' %}selected{% endif %}>Boards (Balanced)</option>
+                        <option value="ISC" {% if user.mode == 'ISC' %}selected{% endif %}>ISC (Academics Focus)</option>
+                        <option value="JEE" {% if user.mode == 'JEE' %}selected{% endif %}>JEE (Intense Core STEM)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="days_left">Days Until Exam</label>
+                    <input type="number" id="days_left" name="days_left" class="form-input" min="1" max="365" value="{{ user.days_left_exam }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="weak_subject">Weak Subject Focus</label>
+                    <select id="weak_subject" name="weak_subject" class="form-select">
+                        <option value="Maths" {% if user.weak_subject == 'Maths' %}selected{% endif %}>Maths</option>
+                        <option value="Physics" {% if user.weak_subject == 'Physics' %}selected{% endif %}>Physics</option>
+                        <option value="Chemistry" {% if user.weak_subject == 'Chemistry' %}selected{% endif %}>Chemistry</option>
+                        <option value="AI and Robotics" {% if user.weak_subject == 'AI and Robotics' %}selected{% endif %}>AI & Robotics</option>
+                        <option value="English" {% if user.weak_subject == 'English' %}selected{% endif %}>English</option>
+                        <option value="Physical Education" {% if user.weak_subject == 'Physical Education' %}selected{% endif %}>Physical Ed.</option>
+                    </select>
+                </div>
+                
+                <h3 style="font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin: 20px 0 10px 0; border-bottom: 1px solid var(--border-glass); padding-bottom: 8px;">
+                    Subject Difficulties (1-10)
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label class="form-label">Maths</label>
+                        <input type="number" name="maths_diff" class="form-input" min="1" max="10" value="{{ user.maths_difficulty }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Physics</label>
+                        <input type="number" name="physics_diff" class="form-input" min="1" max="10" value="{{ user.physics_difficulty }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Chemistry</label>
+                        <input type="number" name="chemistry_diff" class="form-input" min="1" max="10" value="{{ user.chemistry_difficulty }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">AI & Robot</label>
+                        <input type="number" name="ai_diff" class="form-input" min="1" max="10" value="{{ user.ai_robotics_difficulty }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">English</label>
+                        <input type="number" name="english_diff" class="form-input" min="1" max="10" value="{{ user.english_difficulty }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">P.E.</label>
+                        <input type="number" name="pe_diff" class="form-input" min="1" max="10" value="{{ user.physical_education_difficulty }}">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary" style="margin-top: 16px;">
+                    🔄 Regenerate Plan
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Main Area: 30-Day Grid -->
+    <div class="dashboard-column">
+        <div class="glass-card">
+            <div class="calendar-controls-row">
+                <h2 class="card-title" style="margin-bottom: 0;">📅 Study Rota Grid</h2>
+                <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 16px;">
+                    <span>🟢 Green = Holiday Mode Active (Academic hours halved)</span>
+                </div>
+            </div>
+            
+            <div class="calendar-grid">
+                <!-- Grid Header -->
+                <div class="calendar-day-header">Day 1-5</div>
+                <div class="calendar-day-header">Day 6-10</div>
+                <div class="calendar-day-header">Day 11-15</div>
+                <div class="calendar-day-header">Day 16-20</div>
+                <div class="calendar-day-header">Day 21-25</div>
+                <div class="calendar-day-header">Day 26-30</div>
+                <div class="calendar-day-header">Flexible</div>
+            </div>
+            
+            <div class="calendar-grid" style="margin-top: 10px;">
+                {% for day in schedule %}
+                <div class="calendar-day-card {% if day.holiday_mode %}holiday{% endif %}" onclick="toggleHoliday({{ day.day_number }})">
+                    <div>
+                        <div class="day-number-label">Day {{ day.day_number }}</div>
+                        <div class="day-subject-label">{{ day.subject }}</div>
+                    </div>
+                    <div class="day-hours-label">
+                        <span class="subject-badge subject-{{ day.subject|replace(' ', '_')|replace('+', '_') }}">
+                            {{ day.hours_scheduled }} hrs
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleHoliday(dayNumber) {
+    fetch(`/api/toggle_holiday/${dayNumber}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show modified hours and styling
+            window.location.reload();
+        }
+    })
+    .catch(err => console.error("Error toggling holiday:", err));
+}
+</script>
+{% endblock %}
